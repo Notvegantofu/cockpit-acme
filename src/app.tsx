@@ -19,6 +19,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Alert } from "@patternfly/react-core/dist/esm/components/Alert/index.js";
+import { BackToTop } from '@patternfly/react-core';
 import { Card, CardBody, CardTitle } from "@patternfly/react-core/dist/esm/components/Card/index.js";
 
 import cockpit from 'cockpit';
@@ -35,14 +36,16 @@ export const Application = () => {
     }, []);
 
     return (
-        <Card>
-            <CardTitle>{"Acme"}</CardTitle>
-            <CardBody>
-                <Alert
-                    variant="info"
-                    title={ cockpit.format(_("Running on $0"), hostname) }
-                />
-            </CardBody>
-        </Card>
+        <>
+            <Card>
+                <CardTitle>{"Acme"}</CardTitle>
+                <CardBody>
+                    <Alert
+                        variant="info"
+                        title={ cockpit.format(_("Running on $0"), hostname) }
+                    />
+                </CardBody>
+            </Card>
+        </>
     );
 };
