@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Thead, Tr, Th, Tbody, Td } from '@patternfly/react-table';
-import { Button, Bullseye, EmptyState, EmptyStateVariant, EmptyStateIcon, EmptyStateHeader} from '@patternfly/react-core'
+import { Bullseye, EmptyState, EmptyStateVariant, EmptyStateIcon, EmptyStateHeader, SearchInput} from '@patternfly/react-core'
 import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
 import { ConfirmDeletion } from './ConfirmDeletion.js';
 import sampleData from './sampleData.js'
@@ -8,17 +8,21 @@ import cockpit from 'cockpit';
 
 interface AcmeData {
   mainDomain: string;
-  sanDomains: string | null;
-  created: string | null;
+  sanDomains: string;
+  created: string;
   renew: string;
 }
 
 export const DomainTable: React.FunctionComponent = () => {
 
+  const [status, setStatus] = useState(false)
+  const [searchValue, setSearchValue] = React.useState('');
+
   const DataRows: React.FunctionComponent = () => {
     return (
       <>
-        {rows.map((acmeData) => (
+        {filteredRows.length > 0 &&
+        filteredRows.map((acmeData) => (
         <Tr key={acmeData.mainDomain}>
             <Td dataLabel={columnNames.mainDomain}>{acmeData.mainDomain}</Td>
             <Td dataLabel={columnNames.sanDomains}>{acmeData.sanDomains}</Td>
@@ -27,6 +31,7 @@ export const DomainTable: React.FunctionComponent = () => {
             <Td dataLabel={columnNames.remove}>{<ConfirmDeletion removeRow={removeCertificate} domain={acmeData.mainDomain}/>}</Td>
         </Tr>
         ))}
+        {filteredRows.length === 0 && <MissingData/>}
       </>)
   }
 
@@ -48,6 +53,15 @@ export const DomainTable: React.FunctionComponent = () => {
     )
   }
 
+  const searchInput = (
+    <SearchInput
+      placeholder="Filter by server name"
+      value={searchValue}
+      onChange={(_event, value) => onSearchChange(value)}
+      onClear={() => onSearchChange('')}
+    />
+  );
+
   const processData = (data: string) => {
     if (!data) {
       console.error("No data");
@@ -67,8 +81,26 @@ export const DomainTable: React.FunctionComponent = () => {
     return cockpit.spawn(["sudo", "-u", "acme", "/usr/local/bin/acme.sh", "--list", "--listraw"]);
   }
 
-  const [rows, setRows] = useState<AcmeData[]>(processData(""));
-  const [status, setStatus] = useState(false)
+  const [rows, setRows] = useState<AcmeData[]>(processData(sampleData));
+
+  const onSearchChange = (value: string) => {
+    setSearchValue(value);
+  };
+
+  const onFilter = (row: AcmeData) => {
+    if (searchValue === '') {
+      return true;
+    }
+
+    let input: RegExp;
+    try {
+      input = new RegExp(searchValue, 'i');
+    } catch (err) {
+      input = new RegExp(searchValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+    }
+    return row.mainDomain.search(input) >= 0;
+  };
+  const filteredRows = rows.filter(onFilter);
 
   useEffect(() => {
     getCertificateList()
@@ -96,6 +128,13 @@ export const DomainTable: React.FunctionComponent = () => {
   };
 
   return (
+    <>
+    <SearchInput
+      placeholder="Filter by main domain"
+      value={searchValue}
+      onChange={(_event, value) => onSearchChange(value)}
+      onClear={() => onSearchChange('')}
+    />
     <Table
     aria-label="ACME table"
     variant='compact'
@@ -113,5 +152,6 @@ export const DomainTable: React.FunctionComponent = () => {
         {status ? <DataRows/> : <MissingData/>}
     </Tbody>
     </Table>
+    </>
   );
 };
