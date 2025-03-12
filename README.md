@@ -1,6 +1,6 @@
-# Cockpit Starter Kit
+# Cockpit Acme.sh plugin
 
-Scaffolding for a [Cockpit](https://cockpit-project.org/) module.
+Plugin to automate acme.sh Certificate management via cockpit
 
 # Development dependencies
 
