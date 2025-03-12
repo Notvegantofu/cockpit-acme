@@ -41,7 +41,7 @@ export const AddDomainForm: React.FunctionComponent = () => {
     }
     const domains = getDomainList()
     cockpit.spawn(commandBegin.concat("--issue", domains, "--stateless", "--server", "letsencrypt"), {superuser: "require"})
-      .then(() => cockpit.spawn(commandBegin.concat("--deploy", domains, "--deploy-hook", "haproxy", "DEPLOY_HAPROXY_HOT_UPDATE=yes", "DEPLOY_HAPROXY_STATS_SOCKET=/var/lib/haproxy/stats", "DEPLOY_HAPROXY_PEM_PATH=/etc/haproxy/certs"), {superuser: "require"}))
+      .then(() => cockpit.spawn(commandBegin.concat("--deploy", domains, "--deploy-hook", "haproxy", "DEPLOY_HAPROXY_PEM_PATH=/etc/haproxy/certs", "DEPLOY_HAPROXY_STATS_SOCKET=/var/lib/haproxy/stats", "DEPLOY_HAPROXY_HOT_UPDATE=yes"), {superuser: "require"}))
       .then(clearInput)
       .catch(error => console.error(error));
   }
