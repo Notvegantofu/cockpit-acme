@@ -20,10 +20,6 @@ export const DomainTable: React.FunctionComponent = () => {
   const devMode = true;
 
   useEffect(() => {
-    if (devMode) {
-      setRows(processData(sampleData));
-      return
-    }
     getCertificateList()
       .then(result => setRows(processData(result)))
       .catch(error => console.error(error));
@@ -77,6 +73,9 @@ export const DomainTable: React.FunctionComponent = () => {
   }
 
   function getCertificateList() {
+    if (devMode) {
+      return new Promise<string>((resolve) => resolve(sampleData));
+    }
     return cockpit.spawn(["sudo", "-u", "acme", "/usr/local/bin/acme.sh", "--list", "--listraw"]);
   }
 
