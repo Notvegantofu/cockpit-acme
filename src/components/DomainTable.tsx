@@ -14,8 +14,6 @@ interface AcmeData {
 }
 
 export const DomainTable: React.FunctionComponent = () => {
-
-  const [status, setStatus] = useState(false)
   const [searchValue, setSearchValue] = React.useState('');
 
   const DataRows: React.FunctionComponent = () => {
@@ -65,8 +63,7 @@ export const DomainTable: React.FunctionComponent = () => {
   const processData = (data: string) => {
     if (!data) {
       console.error("No data");
-      const noData: AcmeData = { mainDomain: "missing", sanDomains: "missing", created: "missing", renew: "missing"};
-      return [noData];
+      return [];
     }
     const lines = data.split('\n');
     lines.shift();
@@ -81,7 +78,7 @@ export const DomainTable: React.FunctionComponent = () => {
     return cockpit.spawn(["sudo", "-u", "acme", "/usr/local/bin/acme.sh", "--list", "--listraw"]);
   }
 
-  const [rows, setRows] = useState<AcmeData[]>(processData(sampleData));
+  const [rows, setRows] = useState<AcmeData[]>(processData(""));
 
   const onSearchChange = (value: string) => {
     setSearchValue(value);
@@ -105,7 +102,6 @@ export const DomainTable: React.FunctionComponent = () => {
   useEffect(() => {
     getCertificateList()
       .then(result => setRows(processData(result)))
-      .then(() => setStatus(true))
       .catch(error => console.error(error));
   }, []);
 
@@ -140,16 +136,16 @@ export const DomainTable: React.FunctionComponent = () => {
     variant='compact'
     >
     <Thead>
-        <Tr>
+      <Tr>
         <Th>{columnNames.mainDomain}</Th>
         <Th>{columnNames.sanDomains}</Th>
         <Th>{columnNames.created}</Th>
         <Th>{columnNames.renew}</Th>
         <Th></Th>
-        </Tr>
+      </Tr>
     </Thead>
     <Tbody>
-        {status ? <DataRows/> : <MissingData/>}
+      <DataRows/>
     </Tbody>
     </Table>
     </>
