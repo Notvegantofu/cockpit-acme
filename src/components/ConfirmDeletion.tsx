@@ -2,11 +2,11 @@ import React from 'react';
 import { Modal, ModalVariant, Button } from '@patternfly/react-core';
 
 interface DeleteProps {
-  removeRow: (domain: string) => void;
+  removeCertificate: (domain: string) => void;
   domain: string;
 }
 
-export const ConfirmDeletion: React.FunctionComponent<DeleteProps> = ({ removeRow, domain }) => {
+export const ConfirmDeletion: React.FunctionComponent<DeleteProps> = ({ removeCertificate: removeRemoveCertificate, domain }) => {
   const [isModalOpen, setIsModalOpen] = React.useState(false);
 
   const handleModalToggle = (_event: KeyboardEvent | React.MouseEvent) => {
@@ -14,7 +14,7 @@ export const ConfirmDeletion: React.FunctionComponent<DeleteProps> = ({ removeRo
   };
 
   const confirmDeletion = (_event: KeyboardEvent | React.MouseEvent) => {
-    removeRow(domain);
+    removeRemoveCertificate(domain);
     handleModalToggle(_event);
   }
 

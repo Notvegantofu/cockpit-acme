@@ -15,21 +15,27 @@ interface AcmeData {
 
 export const DomainTable: React.FunctionComponent = () => {
   const [searchValue, setSearchValue] = React.useState('');
+  const [rows, setRows] = useState<AcmeData[]>(processData(""));
+  const filteredRows = rows.filter(onFilter);
+
+  useEffect(() => {
+    getCertificateList()
+      .then(result => setRows(processData(result)))
+      .catch(error => console.error(error));
+  }, []);
 
   const DataRows: React.FunctionComponent = () => {
     return (
       <>
-        {filteredRows.length > 0 &&
-        filteredRows.map((acmeData) => (
-        <Tr key={acmeData.mainDomain}>
-            <Td dataLabel={columnNames.mainDomain}>{acmeData.mainDomain}</Td>
-            <Td dataLabel={columnNames.sanDomains}>{acmeData.sanDomains}</Td>
-            <Td dataLabel={columnNames.created}>{acmeData.created}</Td>
-            <Td dataLabel={columnNames.renew}>{acmeData.renew}</Td>
-            <Td dataLabel={columnNames.remove}>{<ConfirmDeletion removeRow={removeCertificate} domain={acmeData.mainDomain}/>}</Td>
-        </Tr>
+        {filteredRows.length === 0 ? <MissingData/> : filteredRows.map((acmeData) => (
+          <Tr key={acmeData.mainDomain}>
+              <Td dataLabel={columnNames.mainDomain}>{acmeData.mainDomain}</Td>
+              <Td dataLabel={columnNames.sanDomains}>{acmeData.sanDomains}</Td>
+              <Td dataLabel={columnNames.created}>{acmeData.created}</Td>
+              <Td dataLabel={columnNames.renew}>{acmeData.renew}</Td>
+              <Td dataLabel={columnNames.remove}>{<ConfirmDeletion removeCertificate={removeCertificate} domain={acmeData.mainDomain}/>}</Td>
+          </Tr>
         ))}
-        {filteredRows.length === 0 && <MissingData/>}
       </>)
   }
 
@@ -51,16 +57,7 @@ export const DomainTable: React.FunctionComponent = () => {
     )
   }
 
-  const searchInput = (
-    <SearchInput
-      placeholder="Filter by server name"
-      value={searchValue}
-      onChange={(_event, value) => onSearchChange(value)}
-      onClear={() => onSearchChange('')}
-    />
-  );
-
-  const processData = (data: string) => {
+  function processData(data: string) {
     if (!data) {
       console.error("No data");
       return [];
@@ -74,17 +71,15 @@ export const DomainTable: React.FunctionComponent = () => {
     })
   }
 
-  const getCertificateList = () => {
+  function getCertificateList() {
     return cockpit.spawn(["sudo", "-u", "acme", "/usr/local/bin/acme.sh", "--list", "--listraw"]);
   }
 
-  const [rows, setRows] = useState<AcmeData[]>(processData(""));
-
-  const onSearchChange = (value: string) => {
+  function onSearchChange(value: string) {
     setSearchValue(value);
   };
 
-  const onFilter = (row: AcmeData) => {
+  function onFilter(row: AcmeData) {
     if (searchValue === '') {
       return true;
     }
@@ -97,21 +92,10 @@ export const DomainTable: React.FunctionComponent = () => {
     }
     return row.mainDomain.search(input) >= 0;
   };
-  const filteredRows = rows.filter(onFilter);
 
-  useEffect(() => {
-    getCertificateList()
-      .then(result => setRows(processData(result)))
-      .catch(error => console.error(error));
-  }, []);
-
-  const removeRow = (domain: string) => {
-    setRows(rows.filter((row) => row.mainDomain !== domain));
-  }
-
-  const removeCertificate = (domain: string) => {
+  function removeCertificate(domain: string) {
     cockpit.spawn(["sudo", "-u", "acme", "/usr/local/bin/acme.sh", "--remove", "-d", domain])
-      .then(() => removeRow(domain))
+      .then(() => setRows(rows.filter((row) => row.mainDomain !== domain)))
       .catch(error => console.error(error));
   }
 
