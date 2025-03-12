@@ -14,7 +14,7 @@ interface AcmeData {
 }
 
 export const DomainTable: React.FunctionComponent = () => {
-  const [searchValue, setSearchValue] = React.useState('');
+  const [searchValue, setSearchValue] = useState('');
   const [rows, setRows] = useState<AcmeData[]>(processData(""));
   const filteredRows = rows.filter(onFilter);
   const devMode = true;

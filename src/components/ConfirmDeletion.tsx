@@ -6,7 +6,7 @@ interface DeleteProps {
   domain: string;
 }
 
-export const ConfirmDeletion: React.FunctionComponent<DeleteProps> = ({ removeCertificate: removeRemoveCertificate, domain }) => {
+export const ConfirmDeletion: React.FunctionComponent<DeleteProps> = ({ removeCertificate: removeCertificate, domain }) => {
   const [isModalOpen, setIsModalOpen] = React.useState(false);
 
   const handleModalToggle = (_event: KeyboardEvent | React.MouseEvent) => {
@@ -14,7 +14,7 @@ export const ConfirmDeletion: React.FunctionComponent<DeleteProps> = ({ removeCe
   };
 
   const confirmDeletion = (_event: KeyboardEvent | React.MouseEvent) => {
-    removeRemoveCertificate(domain);
+    removeCertificate(domain);
     handleModalToggle(_event);
   }
 

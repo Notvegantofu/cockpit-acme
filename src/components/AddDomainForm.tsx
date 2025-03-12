@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Form,
   FormGroup,
@@ -10,15 +10,18 @@ import {
   HelperTextItem
 } from '@patternfly/react-core';
 import cockpit from 'cockpit';
+import { ExclamationCircleIcon } from '@patternfly/react-icons';
 
 export const AddDomainForm: React.FunctionComponent = () => {
-  const [mainDomain, setMainDomain] = React.useState('');
-  const [sanDomains, setSanDomains] = React.useState('');
+  const [mainDomain, setMainDomain] = useState('');
+  const [sanDomains, setSanDomains] = useState('');
+  const [validInput, setValidInput] = useState(true);
   const commandBegin = ["sudo", "-u", "acme", "/usr/local/bin/acme.sh"];
   const devMode = true;
 
   function handleMainDomainChange(_event: React.FormEvent<HTMLInputElement>, mainDomain: string) {
     setMainDomain(mainDomain);
+    setValidInput(true);
   };
 
   function handleSanDomainsChange(_event: React.FormEvent<HTMLInputElement>, sanDomains: string) {
@@ -37,6 +40,7 @@ export const AddDomainForm: React.FunctionComponent = () => {
   function addCertificate() {
     if (!mainDomain) {
       console.error("Main Domain Missing!");
+      setValidInput(false);
       return;
     }
     const domains = getDomainList();
@@ -71,6 +75,11 @@ export const AddDomainForm: React.FunctionComponent = () => {
           value={mainDomain}
           onChange={handleMainDomainChange}
         />
+        <FormHelperText>
+          <HelperText>
+            {validInput || <HelperTextItem icon={<ExclamationCircleIcon/>} variant='error'>This field is required</HelperTextItem>}
+          </HelperText>
+        </FormHelperText>
       </FormGroup>
       <FormGroup
         label="SAN-Domains"
