@@ -17,8 +17,13 @@ export const DomainTable: React.FunctionComponent = () => {
   const [searchValue, setSearchValue] = React.useState('');
   const [rows, setRows] = useState<AcmeData[]>(processData(""));
   const filteredRows = rows.filter(onFilter);
+  const devMode = true;
 
   useEffect(() => {
+    if (devMode) {
+      setRows(processData(sampleData));
+      return
+    }
     getCertificateList()
       .then(result => setRows(processData(result)))
       .catch(error => console.error(error));
@@ -94,6 +99,10 @@ export const DomainTable: React.FunctionComponent = () => {
   };
 
   function removeCertificate(domain: string) {
+    if (devMode) {
+      setRows(rows.filter((row) => row.mainDomain !== domain));
+      return;
+    }
     cockpit.spawn(["sudo", "-u", "acme", "/usr/local/bin/acme.sh", "--remove", "-d", domain])
       .then(() => setRows(rows.filter((row) => row.mainDomain !== domain)))
       .catch(error => console.error(error));
