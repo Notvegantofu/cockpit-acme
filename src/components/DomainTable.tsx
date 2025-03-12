@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Table, Thead, Tr, Th, Tbody, Td } from '@patternfly/react-table';
 import { Button, ButtonProps } from '@patternfly/react-core'
 import { ConfirmDeletion } from './ConfirmDeletion.js';
 import sampleData from './sampleData.js'
+import cockpit from 'cockpit';
 
 interface AcmeData {
   mainDomain: string;
@@ -14,6 +15,11 @@ interface AcmeData {
 export const DomainTable: React.FunctionComponent = () => {
 
   const processData = (data: string) => {
+    if (!data) {
+      console.error("No data");
+      const noData: AcmeData = { mainDomain: "missing", sanDomains: "missing", created: "missing", renew: "missing"};
+      return [noData];
+    }
     const lines = data.split('\n');
     lines.shift();
     return lines.map((value) => {
@@ -23,7 +29,17 @@ export const DomainTable: React.FunctionComponent = () => {
     })
   }
 
+  const getCertificateList = () => {
+    return cockpit.spawn(["sudo", "-u", "acme", "/usr/local/bin/acme.sh", "--list", "--listraw"]);
+  }
+
   const [rows, setRows] = useState<AcmeData[]>(processData(sampleData));
+
+  useEffect(() => {
+    getCertificateList()
+      .then(result => setRows(processData(result)))
+      .catch(error => console.error(error));
+  }, []);
 
   const removeRow = (domain: string) => {
     setRows(rows.filter((row) => row.mainDomain !== domain));
@@ -31,7 +47,9 @@ export const DomainTable: React.FunctionComponent = () => {
 
   const removeCertificate = (domain: string) => {
     console.log(domain);
-    removeRow(domain);
+    cockpit.spawn(["sudo", "-u", "acme", "/usr/local/bin/acme.sh", "--remove", "-d", domain])
+      .then(() => removeRow(domain))
+      .catch(error => console.error(error));
   }
 
   const columnNames = {

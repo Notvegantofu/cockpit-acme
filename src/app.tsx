@@ -17,15 +17,11 @@
  * along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { HorizontalNav } from './components/HorizontalNav';
 import { DomainTable } from './components/DomainTable';
 import { AddDomainForm } from './components/AddDomainForm'
 import { Divider, Stack, StackItem } from '@patternfly/react-core';
-
-import cockpit from 'cockpit';
-
-const _ = cockpit.gettext;
 
 
 export const Application = () => {

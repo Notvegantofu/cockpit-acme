@@ -37,7 +37,7 @@ export const ConfirmDeletion: React.FunctionComponent<DeleteProps> = ({ removeRo
           </Button>
         ]}
       >
-        Are you sure you want to delete this ACME data? This action is not reversible!
+        Are you sure you want to delete this ACME certificate? This action is not reversible!
       </Modal>
     </React.Fragment>
   );
