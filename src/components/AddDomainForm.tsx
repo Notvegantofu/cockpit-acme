@@ -17,7 +17,7 @@ export const AddDomainForm: React.FunctionComponent = () => {
   const [sanDomains, setSanDomains] = useState('');
   const [validInput, setValidInput] = useState(true);
   const commandBegin = ["sudo", "-u", "acme", "/usr/local/bin/acme.sh"];
-  const devMode = true;
+  const devMode = false;
 
   function handleMainDomainChange(_event: React.FormEvent<HTMLInputElement>, mainDomain: string) {
     setMainDomain(mainDomain);

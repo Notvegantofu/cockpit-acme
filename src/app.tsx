@@ -28,15 +28,15 @@ export const Application = () => {
     const [content, setContent] = useState(0);
 
     const actions= [
-      <StackItem><DomainTable/></StackItem>,
-      <StackItem><AddDomainForm/></StackItem>
+      <DomainTable/>,
+      <AddDomainForm/>
     ]
 
     return (
-        <Stack id="mainStack">
-            <StackItem><HorizontalNav setAction={setContent}/></StackItem>
-            <StackItem><Divider/></StackItem>
+        <>
+            <HorizontalNav setAction={setContent}/>
+            <Divider/>
             {actions[content]}
-        </Stack>
+        </>
     );
 };

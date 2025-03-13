@@ -1,5 +1,11 @@
 @use "page.scss";
 
+html, body {
+    height: 100%;
+    padding: 10px;
+    overflow: auto !important;
+}
+
 p {
     font-weight: bold;
 }
@@ -14,4 +20,8 @@ p {
 
 .pf-v5-c-nav {
     --pf-v5-c-nav__link--FontSize: 1.2rem;
+}
+
+.force-color {
+    color: #666;
 }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Thead, Tr, Th, Tbody, Td } from '@patternfly/react-table';
+import { Table, Thead, Tr, Th, Tbody, Td, ThProps } from '@patternfly/react-table';
 import { Bullseye, EmptyState, EmptyStateVariant, EmptyStateIcon, EmptyStateHeader, SearchInput} from '@patternfly/react-core'
 import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
 import { ConfirmDeletion } from './ConfirmDeletion.js';
@@ -16,6 +16,8 @@ interface AcmeData {
 export const DomainTable: React.FunctionComponent = () => {
   const [searchValue, setSearchValue] = useState('');
   const [rows, setRows] = useState<AcmeData[]>(processData(""));
+  const [activeSortIndex, setActiveSortIndex] = useState(0);
+  const [activeSortDirection, setActiveSortDirection] = useState<'asc'|'desc'>('asc');
   const filteredRows = rows.filter(onFilter);
   const devMode = true;
 
@@ -25,46 +27,14 @@ export const DomainTable: React.FunctionComponent = () => {
       .catch(error => console.error(error));
   }, []);
 
-  const DataRows: React.FunctionComponent = () => {
-    return (
-      <>
-        {filteredRows.length === 0 ? <MissingData/> : filteredRows.map((acmeData) => (
-          <Tr key={acmeData.mainDomain}>
-              <Td dataLabel={columnNames.mainDomain}>{acmeData.mainDomain}</Td>
-              <Td dataLabel={columnNames.sanDomains}>{acmeData.sanDomains}</Td>
-              <Td dataLabel={columnNames.created}>{acmeData.created}</Td>
-              <Td dataLabel={columnNames.renew}>{acmeData.renew}</Td>
-              <Td dataLabel={columnNames.remove}>{<ConfirmDeletion removeCertificate={removeCertificate} domain={acmeData.mainDomain}/>}</Td>
-          </Tr>
-        ))}
-      </>)
-  }
-
-  const MissingData: React.FunctionComponent = () => {
-    return (
-      <Tr>
-        <Td colSpan={8}>
-          <Bullseye>
-            <EmptyState variant={EmptyStateVariant.sm}>
-              <EmptyStateHeader
-                icon={<EmptyStateIcon icon={SearchIcon} />}
-                titleText="No results found"
-                headingLevel="h2"
-              />
-            </EmptyState>
-          </Bullseye>
-        </Td>
-      </Tr>
-    )
-  }
-
   function processData(data: string) {
     if (!data) {
       console.error("No data");
       return [];
     }
-    const lines = data.split('\n');
+    let lines = data.split('\n');
     lines.shift();
+    lines = lines.filter(value => value !== "");
     return lines.map((value) => {
       const [ mainDomain, keyLength, sanDomains, caches, created, renew ] = value.split("|");
       const acmeData: AcmeData = { mainDomain: mainDomain, sanDomains: sanDomains, created: created, renew: renew};
@@ -76,7 +46,7 @@ export const DomainTable: React.FunctionComponent = () => {
     if (devMode) {
       return new Promise<string>((resolve) => resolve(sampleData));
     }
-    return cockpit.spawn(["sudo", "-u", "acme", "/usr/local/bin/acme.sh", "--list", "--listraw"]);
+    return cockpit.spawn(["sudo", "-u", "acme", "/usr/local/bin/acme.sh", "--list", "--listraw"], {superuser: 'require'});
   }
 
   function onSearchChange(value: string) {
@@ -102,10 +72,23 @@ export const DomainTable: React.FunctionComponent = () => {
       setRows(rows.filter((row) => row.mainDomain !== domain));
       return;
     }
-    cockpit.spawn(["sudo", "-u", "acme", "/usr/local/bin/acme.sh", "--remove", "-d", domain])
+    cockpit.spawn(["sudo", "-u", "acme", "/usr/local/bin/acme.sh", "--remove", "-d", domain], {superuser: 'require'})
       .then(() => setRows(rows.filter((row) => row.mainDomain !== domain)))
       .catch(error => console.error(error));
   }
+
+  const getSortParams = (columnIndex: number): ThProps['sort'] => ({
+    sortBy: {
+      index: activeSortIndex,
+      direction: activeSortDirection,
+      defaultDirection: 'asc' // starting sort direction when first sorting a column. Defaults to 'asc'
+    },
+    onSort: (_event, index, direction) => {
+      setActiveSortIndex(index);
+      setActiveSortDirection(direction);
+    },
+    columnIndex
+  });
 
   const columnNames = {
     mainDomain: 'Main Domain',
@@ -114,6 +97,54 @@ export const DomainTable: React.FunctionComponent = () => {
     renew: 'Renew',
     remove: 'Remove'
   };
+
+  const getSortableRowValues = (data: AcmeData): (string | number)[] => {
+    const { mainDomain, sanDomains, created, renew } = data;
+    return [mainDomain, sanDomains, created, renew];
+  };
+
+  
+  let sortedData = filteredRows.sort((a, b) => {
+    const aValue = getSortableRowValues(a)[activeSortIndex];
+    const bValue = getSortableRowValues(b)[activeSortIndex];
+    if (activeSortDirection === 'asc') {
+      return (aValue as string).localeCompare(bValue as string);
+    }
+    return (bValue as string).localeCompare(aValue as string);
+  });
+
+  const DataRows: React.FunctionComponent = () => {
+    return (
+      <>
+        {filteredRows.length === 0 ? <MissingData/> : filteredRows.map((acmeData) => (
+          <Tr key={acmeData.mainDomain}>
+              <Td dataLabel={columnNames.mainDomain}>{acmeData.mainDomain}</Td>
+              <Td dataLabel={columnNames.sanDomains} modifier='breakWord'>{acmeData.sanDomains}</Td>
+              <Td dataLabel={columnNames.created}>{acmeData.created}</Td>
+              <Td dataLabel={columnNames.renew}>{acmeData.renew}</Td>
+              <Td dataLabel={columnNames.remove}>{<ConfirmDeletion removeCertificate={removeCertificate} domain={acmeData.mainDomain}/>}</Td>
+          </Tr>
+        ))}
+      </>)
+  }
+
+  const MissingData: React.FunctionComponent = () => {
+    return (
+      <Tr>
+        <Td colSpan={5}>
+          <Bullseye>
+            <EmptyState variant={EmptyStateVariant.sm}>
+              <EmptyStateHeader
+                icon={<EmptyStateIcon icon={SearchIcon} />}
+                titleText="No results found"
+                headingLevel="h2"
+              />
+            </EmptyState>
+          </Bullseye>
+        </Td>
+      </Tr>
+    )
+  }
 
   return (
     <>
@@ -129,11 +160,11 @@ export const DomainTable: React.FunctionComponent = () => {
     >
     <Thead>
       <Tr>
-        <Th>{columnNames.mainDomain}</Th>
-        <Th>{columnNames.sanDomains}</Th>
-        <Th>{columnNames.created}</Th>
-        <Th>{columnNames.renew}</Th>
-        <Th></Th>
+        <Th width={15} sort={getSortParams(0)}>{columnNames.mainDomain}</Th>
+        <Th width={45} modifier='breakWord'>{columnNames.sanDomains}</Th>
+        <Th width={15} sort={getSortParams(2)}>{columnNames.created}</Th>
+        <Th width={15} sort={getSortParams(3)}>{columnNames.renew}</Th>
+        <Th width={10}></Th>
       </Tr>
     </Thead>
     <Tbody>
