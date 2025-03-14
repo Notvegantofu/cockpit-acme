@@ -19,16 +19,17 @@
 
 import React, { useState } from 'react';
 import { HorizontalNav } from './components/HorizontalNav';
-import { DomainTable } from './components/DomainTable';
+import { DomainTable, AcmeData } from './components/DomainTable';
 import { AddDomainForm } from './components/AddDomainForm'
 import { Divider, Stack, StackItem } from '@patternfly/react-core';
 
 
 export const Application = () => {
     const [content, setContent] = useState(0);
+      const [rows, setRows] = useState<AcmeData[]>([]);
 
     const actions= [
-      <DomainTable/>,
+      <DomainTable rows={rows} setRows={setRows}/>,
       <AddDomainForm/>
     ]
 

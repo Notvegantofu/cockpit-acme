@@ -6,16 +6,20 @@ import { ConfirmDeletion } from './ConfirmDeletion.js';
 import sampleData from './sampleData.js'
 import cockpit from 'cockpit';
 
-interface AcmeData {
+export interface AcmeData {
   mainDomain: string;
   sanDomains: string;
   created: string;
   renew: string;
 }
 
-export const DomainTable: React.FunctionComponent = () => {
+interface TableProps {
+  rows: AcmeData[];
+  setRows: React.Dispatch<React.SetStateAction<AcmeData[]>>
+}
+
+export const DomainTable: React.FunctionComponent<TableProps> = ({ rows, setRows }) => {
   const [searchValue, setSearchValue] = useState('');
-  const [rows, setRows] = useState<AcmeData[]>(processData(""));
   const [activeSortIndex, setActiveSortIndex] = useState(0);
   const [activeSortDirection, setActiveSortDirection] = useState<'asc'|'desc'>('asc');
   const filteredRows = rows.filter(onFilter);
@@ -44,7 +48,7 @@ export const DomainTable: React.FunctionComponent = () => {
 
   function getCertificateList() {
     if (devMode) {
-      return new Promise<string>((resolve) => resolve(sampleData));
+      return new Promise<string>((resolve) => setTimeout(() => resolve(sampleData), 1000));
     }
     return cockpit.spawn(["sudo", "-u", "acme", "/usr/local/bin/acme.sh", "--list", "--listraw"], {superuser: 'require'});
   }
