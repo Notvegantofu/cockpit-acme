@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Thead, Tr, Th, Tbody, Td, ThProps } from '@patternfly/react-table';
-import { Bullseye, EmptyState, EmptyStateVariant, EmptyStateIcon, EmptyStateHeader, SearchInput} from '@patternfly/react-core'
+import { Bullseye, EmptyState, EmptyStateVariant, EmptyStateIcon, EmptyStateHeader, SearchInput, Spinner} from '@patternfly/react-core'
 import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
 import { ConfirmDeletion } from './ConfirmDeletion.js';
 import sampleData from './sampleData.js'
@@ -20,14 +20,16 @@ interface TableProps {
 
 export const DomainTable: React.FunctionComponent<TableProps> = ({ rows, setRows }) => {
   const [searchValue, setSearchValue] = useState('');
+  const [ready, setReady] = useState(false);
   const [activeSortIndex, setActiveSortIndex] = useState(0);
   const [activeSortDirection, setActiveSortDirection] = useState<'asc'|'desc'>('asc');
   const filteredRows = rows.filter(onFilter);
-  const devMode = true;
+  const devMode = false;
 
   useEffect(() => {
     getCertificateList()
       .then(result => setRows(processData(result)))
+      .then(() => setReady(true))
       .catch(error => console.error(error));
   }, []);
 
@@ -120,7 +122,8 @@ export const DomainTable: React.FunctionComponent<TableProps> = ({ rows, setRows
   const DataRows: React.FunctionComponent = () => {
     return (
       <>
-        {filteredRows.length === 0 ? <MissingData/> : filteredRows.map((acmeData) => (
+        {!ready? <LoadingData/> :
+        filteredRows.length === 0 ? <MissingData/> : filteredRows.map((acmeData) => (
           <Tr key={acmeData.mainDomain}>
               <Td dataLabel={columnNames.mainDomain}>{acmeData.mainDomain}</Td>
               <Td dataLabel={columnNames.sanDomains} modifier='breakWord'>{acmeData.sanDomains}</Td>
@@ -144,6 +147,18 @@ export const DomainTable: React.FunctionComponent<TableProps> = ({ rows, setRows
                 headingLevel="h2"
               />
             </EmptyState>
+          </Bullseye>
+        </Td>
+      </Tr>
+    )
+  }
+
+  const LoadingData: React.FunctionComponent = () => {
+    return (
+      <Tr>
+        <Td colSpan={3}>
+          <Bullseye>
+            <Spinner/>
           </Bullseye>
         </Td>
       </Tr>
