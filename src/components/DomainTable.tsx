@@ -3,8 +3,9 @@ import { Table, Thead, Tr, Th, Tbody, Td, ThProps } from '@patternfly/react-tabl
 import { Bullseye, EmptyState, EmptyStateVariant, EmptyStateIcon, EmptyStateHeader, SearchInput, Spinner} from '@patternfly/react-core'
 import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
 import { ConfirmDeletion } from './ConfirmDeletion.js';
-import sampleData from './sampleData.js'
+import sampleData from '../sampleData.js'
 import cockpit from 'cockpit';
+import { devMode } from '../app'
 
 export interface AcmeData {
   mainDomain: string;
@@ -14,46 +15,21 @@ export interface AcmeData {
 }
 
 interface TableProps {
-  rows: AcmeData[];
-  setRows: React.Dispatch<React.SetStateAction<AcmeData[]>>
+  rowState: [AcmeData[], React.Dispatch<React.SetStateAction<AcmeData[]>>];
+  searchState: [string, React.Dispatch<React.SetStateAction<string>>];
+  readyState: [boolean, React.Dispatch<React.SetStateAction<boolean>>];
+  indexState: [number, React.Dispatch<React.SetStateAction<number>>];
+  directionState: ['asc'|'desc', React.Dispatch<React.SetStateAction<'asc' | 'desc'>>];
+  getCertificateList: () => Promise<string>;
 }
 
-export const DomainTable: React.FunctionComponent<TableProps> = ({ rows, setRows }) => {
-  const [searchValue, setSearchValue] = useState('');
-  const [ready, setReady] = useState(false);
-  const [activeSortIndex, setActiveSortIndex] = useState(0);
-  const [activeSortDirection, setActiveSortDirection] = useState<'asc'|'desc'>('asc');
+export const DomainTable: React.FunctionComponent<TableProps> = ({ rowState, searchState, readyState, indexState, directionState, getCertificateList}) => {
+  const [rows, setRows] = rowState;
+  const [searchValue, setSearchValue] = searchState;
+  const [ready, setReady] = readyState;
+  const [activeSortIndex, setActiveSortIndex] = indexState;
+  const [activeSortDirection, setActiveSortDirection] = directionState;
   const filteredRows = rows.filter(onFilter);
-  const devMode = false;
-
-  useEffect(() => {
-    getCertificateList()
-      .then(result => setRows(processData(result)))
-      .then(() => setReady(true))
-      .catch(error => console.error(error));
-  }, []);
-
-  function processData(data: string) {
-    if (!data) {
-      console.error("No data");
-      return [];
-    }
-    let lines = data.split('\n');
-    lines.shift();
-    lines = lines.filter(value => value !== "");
-    return lines.map((value) => {
-      const [ mainDomain, keyLength, sanDomains, caches, created, renew ] = value.split("|");
-      const acmeData: AcmeData = { mainDomain: mainDomain, sanDomains: sanDomains, created: created, renew: renew};
-      return acmeData;
-    })
-  }
-
-  function getCertificateList() {
-    if (devMode) {
-      return new Promise<string>((resolve) => setTimeout(() => resolve(sampleData), 1000));
-    }
-    return cockpit.spawn(["sudo", "-u", "acme", "/usr/local/bin/acme.sh", "--list", "--listraw"], {superuser: 'require'});
-  }
 
   function onSearchChange(value: string) {
     setSearchValue(value);
