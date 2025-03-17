@@ -4,7 +4,7 @@ import { Bullseye, EmptyState, EmptyStateVariant, EmptyStateIcon, EmptyStateHead
 import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
 import { ConfirmDeletion } from './ConfirmDeletion.js';
 import sampleData from '../sampleData.js'
-import cockpit from 'cockpit';
+import cockpit, { assert } from 'cockpit';
 import { devMode } from '../app'
 
 export interface AcmeData {
@@ -20,10 +20,9 @@ interface TableProps {
   readyState: [boolean, React.Dispatch<React.SetStateAction<boolean>>];
   indexState: [number, React.Dispatch<React.SetStateAction<number>>];
   directionState: ['asc'|'desc', React.Dispatch<React.SetStateAction<'asc' | 'desc'>>];
-  getCertificateList: () => Promise<string>;
 }
 
-export const DomainTable: React.FunctionComponent<TableProps> = ({ rowState, searchState, readyState, indexState, directionState, getCertificateList}) => {
+export const DomainTable: React.FunctionComponent<TableProps> = ({ rowState, searchState, readyState, indexState, directionState}) => {
   const [rows, setRows] = rowState;
   const [searchValue, setSearchValue] = searchState;
   const [ready, setReady] = readyState;
@@ -63,7 +62,7 @@ export const DomainTable: React.FunctionComponent<TableProps> = ({ rowState, sea
     sortBy: {
       index: activeSortIndex,
       direction: activeSortDirection,
-      defaultDirection: 'asc' // starting sort direction when first sorting a column. Defaults to 'asc'
+      defaultDirection: 'asc'
     },
     onSort: (_event, index, direction) => {
       setActiveSortIndex(index);
@@ -155,10 +154,10 @@ export const DomainTable: React.FunctionComponent<TableProps> = ({ rowState, sea
     >
     <Thead>
       <Tr>
-        <Th width={15} sort={getSortParams(0)}>{columnNames.mainDomain}</Th>
+        <Th width={15} sort={getSortParams(0) || {sortBy:{}, columnIndex:0}}>{columnNames.mainDomain}</Th>
         <Th width={45} modifier='breakWord'>{columnNames.sanDomains}</Th>
-        <Th width={15} sort={getSortParams(2)}>{columnNames.created}</Th>
-        <Th width={15} sort={getSortParams(3)}>{columnNames.renew}</Th>
+        <Th width={15} sort={getSortParams(2)|| {sortBy:{}, columnIndex:0}}>{columnNames.created}</Th>
+        <Th width={15} sort={getSortParams(3)|| {sortBy:{}, columnIndex:0}}>{columnNames.renew}</Th>
         <Th width={10}></Th>
       </Tr>
     </Thead>

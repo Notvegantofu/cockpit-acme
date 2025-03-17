@@ -25,7 +25,7 @@ import { Divider, Stack, StackItem } from '@patternfly/react-core';
 import cockpit from 'cockpit'
 import sampleData from './sampleData.js'
 
-export const devMode = false;
+export const devMode = true;
 
 export const Application = () => {
     const [content, setContent] = useState(0);
@@ -67,7 +67,7 @@ export const Application = () => {
   }, []);
 
     const actions= [
-      <DomainTable rowState={rowState} searchState={searchState} readyState={readyState} indexState={indexState} directionState={directionState} getCertificateList={getCertificateList}/>,
+      <DomainTable rowState={rowState} searchState={searchState} readyState={readyState} indexState={indexState} directionState={directionState}/>,
       <AddDomainForm/>
     ]
 
