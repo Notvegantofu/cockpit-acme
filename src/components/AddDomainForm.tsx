@@ -21,7 +21,7 @@ export const AddDomainForm: React.FunctionComponent = () => {
   const [validInput, setValidInput] = useState(true);
   const [output, setOutput] = useState('');
   const sudoAcme = ["sudo", "-u", "acme", "/usr/local/bin/acme.sh"];
-  const envVariables = ["DEPLOY_HAPROXY_HOT_UPDATE=yes", "\\", "DEPLOY_HAPROXY_STATS_SOCKET=/var/lib/haproxy/stats", "\\", "DEPLOY_HAPROXY_PEM_PATH=/etc/haproxy/certs", "\\"];
+  const envVariables = ["DEPLOY_HAPROXY_HOT_UPDATE=yes", "DEPLOY_HAPROXY_STATS_SOCKET=/var/lib/haproxy/stats", "DEPLOY_HAPROXY_PEM_PATH=/etc/haproxy/certs"];
 
   function handleMainDomainChange(_event: React.FormEvent<HTMLInputElement>, mainDomain: string) {
     setMainDomain(mainDomain);
@@ -49,20 +49,21 @@ export const AddDomainForm: React.FunctionComponent = () => {
     }
     const domains = getDomainList();
     const firstCommand = sudoAcme.concat("--issue", domains, "--force", "--stateless", "--server", "letsencrypt");
-    const secondCommand = envVariables.concat(sudoAcme, "--deploy", domains, "--deploy-hook", "haproxy");
+    const secondCommand = sudoAcme.concat("--deploy", domains, "--deploy-hook", "haproxy").reduce((prev, curr) => prev + " " + curr); // This one is a string instead of an array as we need to spawn the process in a shell for the env Variables to work.
     if (devMode) {
-      console.log(`Executing commands:
-        ${firstCommand}
-        ${secondCommand}`);
-        clearInput();
-        return;
+      setOutput(`${firstCommand.reduce((prev, curr) => prev + " " + curr)}\n`);
+      setOutput(output => output + "Output of first command" + "\n");
+      setOutput(output => output + secondCommand + "\n");
+      setOutput(output => output + "Output of second command\n");
+      clearInput();
+      return;
     }
-    setOutput(firstCommand.reduce((prev, curr) => prev + curr));
+    setOutput(firstCommand.reduce((prev, curr) => prev + " " + curr) + '\n');
     cockpit.spawn(firstCommand, {superuser: "require"})
-      .stream((commandOutput) => setOutput(output+commandOutput))
-      .then(() => setOutput(secondCommand.reduce((prev, curr) => prev + curr)))
-      .then(() => cockpit.spawn(secondCommand, {superuser: "require"})
-      .stream((commandOutput) => setOutput(output+commandOutput)))
+      .stream((commandOutput) => setOutput(output => output + commandOutput))
+      .then(() => setOutput(output => output + secondCommand + '\n'))
+      .then(() => cockpit.spawn(["sh", "-c", secondCommand], {superuser: "require", environ:envVariables})
+      .stream((commandOutput) => setOutput(output => output + commandOutput)))
       .then(clearInput)
       .catch(error => console.error(error));
   }
@@ -70,6 +71,11 @@ export const AddDomainForm: React.FunctionComponent = () => {
   function clearInput() {
     setMainDomain("");
     setSanDomains("");
+  }
+  
+  function clearEverything() {
+    clearInput();
+    setOutput('');
   }
 
   return (
@@ -110,7 +116,7 @@ export const AddDomainForm: React.FunctionComponent = () => {
       </FormGroup>
       <ActionGroup>
         <Button variant="primary" onClick={addCertificate}>Add</Button>
-        <Button variant="link" onClick={clearInput}>Cancel</Button>
+        <Button variant="link" onClick={clearEverything}>Cancel</Button>
       </ActionGroup>
       <CodeBlock>
         <CodeBlockCode>{output}</CodeBlockCode>

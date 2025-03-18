@@ -25,7 +25,7 @@ import { Divider, Stack, StackItem } from '@patternfly/react-core';
 import cockpit from 'cockpit'
 import sampleData from './sampleData.js'
 
-export const devMode = false;
+export const devMode = true;
 
 export const Application = () => {
     const [content, setContent] = useState(0);
@@ -53,7 +53,7 @@ export const Application = () => {
         lines.shift();
         lines = lines.filter(value => value !== "");
         return lines.map((value) => {
-          const [ mainDomain, keyLength, sanDomains, caches, created, renew ] = value.split("|");
+          const [ mainDomain, _, sanDomains, __, created, renew ] = value.split("|");
           const acmeData: AcmeData = { mainDomain: mainDomain, sanDomains: sanDomains, created: created, renew: renew};
           return acmeData;
         })
