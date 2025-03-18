@@ -7,7 +7,9 @@ import {
   Button,
   FormHelperText,
   HelperText,
-  HelperTextItem
+  HelperTextItem,
+  CodeBlockCode,
+  CodeBlock
 } from '@patternfly/react-core';
 import cockpit from 'cockpit';
 import { ExclamationCircleIcon } from '@patternfly/react-icons';
@@ -17,7 +19,9 @@ export const AddDomainForm: React.FunctionComponent = () => {
   const [mainDomain, setMainDomain] = useState('');
   const [sanDomains, setSanDomains] = useState('');
   const [validInput, setValidInput] = useState(true);
-  const commandBegin = ["sudo", "-u", "acme", "/usr/local/bin/acme.sh"];
+  const [output, setOutput] = useState('');
+  const sudoAcme = ["sudo", "-u", "acme", "/usr/local/bin/acme.sh"];
+  const envVariables = ["DEPLOY_HAPROXY_HOT_UPDATE=yes", "\\", "DEPLOY_HAPROXY_STATS_SOCKET=/var/lib/haproxy/stats", "\\", "DEPLOY_HAPROXY_PEM_PATH=/etc/haproxy/certs", "\\"];
 
   function handleMainDomainChange(_event: React.FormEvent<HTMLInputElement>, mainDomain: string) {
     setMainDomain(mainDomain);
@@ -44,15 +48,21 @@ export const AddDomainForm: React.FunctionComponent = () => {
       return;
     }
     const domains = getDomainList();
+    const firstCommand = sudoAcme.concat("--issue", domains, "--force", "--stateless", "--server", "letsencrypt");
+    const secondCommand = envVariables.concat(sudoAcme, "--deploy", domains, "--deploy-hook", "haproxy");
     if (devMode) {
       console.log(`Executing commands:
-        ${commandBegin.concat("--issue", domains, "--stateless", "--server", "letsencrypt")}
-        ${commandBegin.concat("--deploy", domains, "--deploy-hook", "haproxy", "DEPLOY_HAPROXY_PEM_PATH=/etc/haproxy/certs", "DEPLOY_HAPROXY_STATS_SOCKET=/var/lib/haproxy/stats", "DEPLOY_HAPROXY_HOT_UPDATE=yes")}`);
+        ${firstCommand}
+        ${secondCommand}`);
         clearInput();
         return;
     }
-    cockpit.spawn(commandBegin.concat("--issue", domains, "--stateless", "--server", "letsencrypt"), {superuser: "require"})
-      .then(() => cockpit.spawn(commandBegin.concat("--deploy", domains, "--deploy-hook", "haproxy", "DEPLOY_HAPROXY_PEM_PATH=/etc/haproxy/certs", "DEPLOY_HAPROXY_STATS_SOCKET=/var/lib/haproxy/stats", "DEPLOY_HAPROXY_HOT_UPDATE=yes"), {superuser: "require"}))
+    setOutput(firstCommand.reduce((prev, curr) => prev + curr));
+    cockpit.spawn(firstCommand, {superuser: "require"})
+      .stream((commandOutput) => setOutput(output+commandOutput))
+      .then(() => setOutput(secondCommand.reduce((prev, curr) => prev + curr)))
+      .then(() => cockpit.spawn(secondCommand, {superuser: "require"})
+      .stream((commandOutput) => setOutput(output+commandOutput)))
       .then(clearInput)
       .catch(error => console.error(error));
   }
@@ -102,6 +112,9 @@ export const AddDomainForm: React.FunctionComponent = () => {
         <Button variant="primary" onClick={addCertificate}>Add</Button>
         <Button variant="link" onClick={clearInput}>Cancel</Button>
       </ActionGroup>
+      <CodeBlock>
+        <CodeBlockCode>{output}</CodeBlockCode>
+      </CodeBlock>
     </Form>
   );
 };

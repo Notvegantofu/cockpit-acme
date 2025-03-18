@@ -157,7 +157,7 @@ export const DomainTable: React.FunctionComponent<TableProps> = ({ rowState, sea
         <Th width={45} modifier='breakWord'>{columnNames.sanDomains}</Th>
         <Th width={15} sort={getSortParams(2)|| {sortBy:{}, columnIndex:0}}>{columnNames.created}</Th>
         <Th width={15} sort={getSortParams(3)|| {sortBy:{}, columnIndex:0}}>{columnNames.renew}</Th>
-        <Th width={10}></Th>
+        <Th width={10} screenReaderText='Delete Column'></Th>
       </Tr>
     </Thead>
     <Tbody>
