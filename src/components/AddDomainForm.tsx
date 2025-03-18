@@ -21,7 +21,7 @@ export const AddDomainForm: React.FunctionComponent = () => {
   const [validInput, setValidInput] = useState(true);
   const [output, setOutput] = useState('');
   const sudoAcme = ["sudo", "-u", "acme", "/usr/local/bin/acme.sh"];
-  const envVariables = ["DEPLOY_HAPROXY_HOT_UPDATE=yes", "DEPLOY_HAPROXY_STATS_SOCKET=/var/lib/haproxy/stats", "DEPLOY_HAPROXY_PEM_PATH=/etc/haproxy/certs"];
+  const envVariables = ["DEPLOY_HAPROXY_HOT_UPDATE=yes;", "DEPLOY_HAPROXY_STATS_SOCKET=/var/lib/haproxy/stats;", "DEPLOY_HAPROXY_PEM_PATH=/etc/haproxy/certs;"];
 
   function handleMainDomainChange(_event: React.FormEvent<HTMLInputElement>, mainDomain: string) {
     setMainDomain(mainDomain);
@@ -36,6 +36,7 @@ export const AddDomainForm: React.FunctionComponent = () => {
       let result = ["-d", mainDomain];
       const sanDomainList = sanDomains.split(",");
       for (let domain of sanDomainList) {
+        if (!domain) continue;
         result.push("-d", domain.trim());
       }
       return result;
@@ -49,7 +50,7 @@ export const AddDomainForm: React.FunctionComponent = () => {
     }
     const domains = getDomainList();
     const firstCommand = sudoAcme.concat("--issue", domains, "--force", "--stateless", "--server", "letsencrypt");
-    const secondCommand = sudoAcme.concat("--deploy", domains, "--deploy-hook", "haproxy").reduce((prev, curr) => prev + " " + curr); // This one is a string instead of an array as we need to spawn the process in a shell for the env Variables to work.
+    const secondCommand = envVariables.concat(sudoAcme, "--deploy", domains, "--deploy-hook", "haproxy").reduce((prev, curr) => prev + " " + curr); // This one is a string instead of an array as we need to spawn the process in a shell for the env Variables to work.
     if (devMode) {
       setOutput(`${firstCommand.reduce((prev, curr) => prev + " " + curr)}\n`);
       setOutput(output => output + "Output of first command" + "\n");
@@ -62,10 +63,10 @@ export const AddDomainForm: React.FunctionComponent = () => {
     cockpit.spawn(firstCommand, {superuser: "require"})
       .stream((commandOutput) => setOutput(output => output + commandOutput))
       .then(() => setOutput(output => output + secondCommand + '\n'))
-      .then(() => cockpit.spawn(["sh", "-c", secondCommand], {superuser: "require", environ:envVariables})
+      .then(() => cockpit.spawn(["sh", "-c", secondCommand], {superuser: "require"})
       .stream((commandOutput) => setOutput(output => output + commandOutput)))
       .then(clearInput)
-      .catch(error => console.error(error));
+      .catch(error => setOutput(output => output + error.message));
   }
 
   function clearInput() {

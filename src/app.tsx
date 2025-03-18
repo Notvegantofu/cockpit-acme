@@ -25,7 +25,7 @@ import { Divider, Stack, StackItem } from '@patternfly/react-core';
 import cockpit from 'cockpit'
 import sampleData from './sampleData.js'
 
-export const devMode = true;
+export const devMode = false;
 
 export const Application = () => {
     const [content, setContent] = useState(0);
