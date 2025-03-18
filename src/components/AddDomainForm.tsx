@@ -21,7 +21,7 @@ export const AddDomainForm: React.FunctionComponent = () => {
   const [validInput, setValidInput] = useState(true);
   const [output, setOutput] = useState('');
   const sudoAcme = ["sudo", "-u", "acme", "/usr/local/bin/acme.sh"];
-  const envVariables = ["DEPLOY_HAPROXY_HOT_UPDATE=yes;", "DEPLOY_HAPROXY_STATS_SOCKET=/var/lib/haproxy/stats;", "DEPLOY_HAPROXY_PEM_PATH=/etc/haproxy/certs;"];
+  const envVariables = ["export DEPLOY_HAPROXY_HOT_UPDATE=yes; export DEPLOY_HAPROXY_STATS_SOCKET=/var/lib/haproxy/stats; export DEPLOY_HAPROXY_PEM_PATH=/etc/haproxy/certs;"];
 
   function handleMainDomainChange(_event: React.FormEvent<HTMLInputElement>, mainDomain: string) {
     setMainDomain(mainDomain);
