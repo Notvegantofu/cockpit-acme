@@ -15,7 +15,11 @@ import cockpit from 'cockpit';
 import { ExclamationCircleIcon } from '@patternfly/react-icons';
 import { devMode } from '../app';
 
-export const AddDomainForm: React.FunctionComponent = () => {
+interface FormProps {
+  updateRows: () => void;
+}
+
+export const AddDomainForm: React.FunctionComponent<FormProps> = ({ updateRows }) => {
   const [mainDomain, setMainDomain] = useState('');
   const [sanDomains, setSanDomains] = useState('');
   const [validInput, setValidInput] = useState(true);
@@ -57,6 +61,7 @@ export const AddDomainForm: React.FunctionComponent = () => {
       setOutput(output => output + secondCommand.reduce((prev, curr) => prev + " " + curr) + "\n");
       setOutput(output => output + "Output of second command\n");
       clearInput();
+      updateRows();
       return;
     }
     setOutput(firstCommand.reduce((prev, curr) => prev + " " + curr) + '\n');
@@ -66,6 +71,7 @@ export const AddDomainForm: React.FunctionComponent = () => {
       .then(() => cockpit.spawn(secondCommand, {superuser: "require"})
       .stream((commandOutput) => setOutput(output => output + commandOutput)))
       .then(clearInput)
+      .then(updateRows)
       .catch(error => setOutput(output => output + error.message));
   }
 

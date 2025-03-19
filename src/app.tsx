@@ -38,10 +38,10 @@ export const Application = () => {
     const directionState = useState<'asc'|'desc'>('asc');
 
     function getCertificateList() {
-    if (devMode) {
-        return new Promise<string>((resolve) => setTimeout(() => resolve(sampleData), 1000));
-    }
-    return cockpit.spawn(["sudo", "-u", "acme", "/usr/local/bin/acme.sh", "--list", "--listraw"], {superuser: 'require'});
+      if (devMode) {
+        return new Promise<string>((resolve) => setTimeout(() => resolve(sampleData), 3000));
+      }
+      return cockpit.spawn(["sudo", "-u", "acme", "/usr/local/bin/acme.sh", "--list", "--listraw"], {superuser: 'require'});
     }
 
     function processData(data: string) {
@@ -57,18 +57,23 @@ export const Application = () => {
           const acmeData: AcmeData = { mainDomain: mainDomain, sanDomains: sanDomains, created: created, renew: renew};
           return acmeData;
         })
-      }
+    }
+
+    function updateRows() {
+      setReady(false);
+      getCertificateList()
+        .then(result => setRows(processData(result)))
+        .then(() => setReady(true))
+        .catch(error => console.error(error));
+    }
 
     useEffect(() => {
-    getCertificateList()
-      .then(result => setRows(processData(result)))
-      .then(() => setReady(true))
-      .catch(error => console.error(error));
-  }, []);
+      updateRows();
+    }, []);
 
     const actions= [
       <DomainTable rowState={rowState} searchState={searchState} readyState={readyState} indexState={indexState} directionState={directionState}/>,
-      <AddDomainForm/>
+      <AddDomainForm updateRows={updateRows}/>
     ]
 
     return (
