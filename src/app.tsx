@@ -30,12 +30,8 @@ export const devMode = false;
 export const Application = () => {
     const [content, setContent] = useState(0);
     const rowState = useState<AcmeData[]>([]);
-    const searchState = useState('');
-    const readyState = useState(false);
-    const indexState = useState(0);
+    const [ready, setReady] = useState(false);
     const setRows = rowState[1];
-    const setReady = readyState[1];
-    const directionState = useState<'asc'|'desc'>('asc');
 
     function getCertificateList() {
       if (devMode) {
@@ -72,7 +68,7 @@ export const Application = () => {
     }, []);
 
     const actions= [
-      <DomainTable rowState={rowState} searchState={searchState} readyState={readyState} indexState={indexState} directionState={directionState}/>,
+      <DomainTable dataState={rowState} ready={ready}/>,
       <AddDomainForm updateRows={updateRows}/>
     ]
 
