@@ -21,7 +21,7 @@ import React, { useEffect, useState } from 'react';
 import { HorizontalNav } from './components/HorizontalNav';
 import { DomainTable, AcmeData } from './components/DomainTable';
 import { AddDomainForm } from './components/AddDomainForm'
-import { Divider, Stack, StackItem } from '@patternfly/react-core';
+import { Divider,  } from '@patternfly/react-core';
 import cockpit from 'cockpit'
 import sampleData from './sampleData.js'
 
