@@ -33,32 +33,41 @@ export const Application = () => {
     const [ready, setReady] = useState(false);
     const setRows = rowState[1];
 
-    function getCertificateList() {
+    function getACMEList() {
       if (devMode) {
         return new Promise<string>((resolve) => setTimeout(() => resolve(sampleData), 3000));
       }
       return cockpit.spawn(["sudo", "-u", "acme", "/usr/local/bin/acme.sh", "--list", "--listraw"], {superuser: 'require'});
     }
 
-    function processData(data: string) {
-        if (!data) {
-          console.error("No data");
-          return [];
-        }
-        let lines = data.split('\n');
-        lines.shift();
-        lines = lines.filter(value => value !== "");
-        return lines.map((value) => {
-          const [ mainDomain, _, sanDomains, __, created, renew ] = value.split("|");
-          const acmeData: AcmeData = { mainDomain: mainDomain, sanDomains: sanDomains, created: created, renew: renew};
-          return acmeData;
-        })
+    function getCertificateList() {
+      return cockpit.spawn(["ls", "/etc/haproxy/certs/"])
     }
 
-    function updateRows() {
+    async function processData() {
+      const [acmeData, certificateData] = await Promise.all([getACMEList(), getCertificateList()])
+      if (!acmeData) {
+        console.error("No data");
+        return [];
+      }
+      let certificates = certificateData.split('\n').filter(value => value !== "");
+      const lines = acmeData.split('\n').filter(value => value !== "");
+      lines.shift();
+      return lines.map((value) => {
+        const [ mainDomain, _, sanDomains, __, created, renew ] = value.split("|");
+        const certIndex = certificates.indexOf(`${mainDomain}.pem`)
+        if (certIndex !== -1) {
+          certificates.splice(certIndex, 1)
+        }
+        const acmeDate: AcmeData = { mainDomain: mainDomain, sanDomains: sanDomains, created: created, renew: renew, hasCertificate: certIndex !== -1, hasACME: true};
+        return acmeDate;
+      }).concat(certificates.map(certificate => {return {mainDomain: certificate.replace(/\.pem$/, ""), sanDomains: "", created: "unknown", renew: "unknown", hasCertificate: true, hasACME: false}}));
+    }
+
+    async function updateRows() {
       setReady(false);
-      getCertificateList()
-        .then(result => setRows(processData(result)))
+      await processData()
+        .then(setRows)
         .then(() => setReady(true))
         .catch(error => console.error(error));
     }
