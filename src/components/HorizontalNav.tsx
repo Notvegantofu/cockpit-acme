@@ -1,17 +1,18 @@
 import React from 'react';
 import { Nav, NavItem, NavList } from '@patternfly/react-core';
+import cockpit from 'cockpit'
 
 interface NavBarProps {
-  setAction: (param: number) => void;
+  location: cockpit.Location;
 }
 
-export const HorizontalNav: React.FunctionComponent<NavBarProps> = ({ setAction }) => {
+export const HorizontalNav: React.FunctionComponent<NavBarProps> = ({ location }) => {
   const [activeItem, setActiveItem] = React.useState(0);
   const action = ["List", "Add"];
 
-  const onSelect = (_event: React.FormEvent<HTMLInputElement>, result: { itemId: number | string }) => {
+  const onSelect = (_event: React.FormEvent<HTMLInputElement>, result: { itemId: number | string; to: string }) => {
     setActiveItem(result.itemId as number);
-    setAction(result.itemId as number);
+    location.go(result.to);
   };
 
   return (
@@ -20,13 +21,12 @@ export const HorizontalNav: React.FunctionComponent<NavBarProps> = ({ setAction 
         {action.map((value, index) => {
           return (
             <NavItem
-              className='force-color'
               preventDefault
               key={index}
               itemId={index}
               isActive={activeItem === index}
               id={`horizontal-nav-${index}`}
-              to={`#horizontal-nav-${index}`}
+              to={value}
             >
               {value}
             </NavItem>

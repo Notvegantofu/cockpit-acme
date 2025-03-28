@@ -1,6 +1,6 @@
 {
   "name": "acme",
-  "description": "Scaffolding for a cockpit module",
+  "description": "Cockpit ACME plugin",
   "type": "module",
   "main": "index.js",
   "repository": "git@github.com:Notvegantofu/cockpit-acme.git",

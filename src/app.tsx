@@ -18,7 +18,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { HorizontalNav } from './components/HorizontalNav';
+import { HorizontalNav } from 'shared/HorizontalNav';
 import { DomainTable, AcmeData } from './components/DomainTable';
 import { AddDomainForm } from './components/AddDomainForm'
 import { Divider,  } from '@patternfly/react-core';
@@ -28,10 +28,24 @@ import sampleData from './sampleData.js'
 export const devMode = false;
 
 export const Application = () => {
-    const [content, setContent] = useState(0);
     const rowState = useState<AcmeData[]>([]);
     const [ready, setReady] = useState(false);
     const setRows = rowState[1];
+    const pages = ["List", "Add"];
+    const [ currentPage, setCurrentPage ] = useState("List");
+    const addDomainForm = <AddDomainForm updateRows={updateRows}/>;
+    const domainTable = <DomainTable dataState={rowState} ready={ready}/>;
+
+    useEffect(() => {
+      updateRows();
+    }, []);
+
+    function renderPage() {
+      switch(cockpit.location.path[0]) {
+        case 'Add': return addDomainForm;
+        default: return domainTable;
+      }
+    }
 
     function getACMEList() {
       if (devMode) {
@@ -72,20 +86,15 @@ export const Application = () => {
         .catch(error => console.error(error));
     }
 
-    useEffect(() => {
-      updateRows();
-    }, []);
-
-    const actions= [
-      <DomainTable dataState={rowState} ready={ready}/>,
-      <AddDomainForm updateRows={updateRows}/>
-    ]
 
     return (
         <>
-            <HorizontalNav setAction={setContent}/>
+            <HorizontalNav
+              pages={pages}
+              setCurrentPage={setCurrentPage}
+            />
             <Divider/>
-            {actions[content]}
+            {renderPage()}
         </>
     );
 };
