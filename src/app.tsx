@@ -26,6 +26,7 @@ import cockpit from 'cockpit'
 import sampleData from './sampleData.js'
 
 export const devMode = false;
+// export const devMode = true;
 
 export const Application = () => {
     const rowState = useState<AcmeData[]>([]);
