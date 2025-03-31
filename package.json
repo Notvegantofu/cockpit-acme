@@ -3,7 +3,7 @@
   "description": "Cockpit ACME plugin",
   "type": "module",
   "main": "index.js",
-  "repository": "git@github.com:Notvegantofu/cockpit-acme.git",
+  "repository": "git@github.com:valetobias/cockpit-acme.git",
   "author": "",
   "license": "LGPL-2.1",
   "engines": {
